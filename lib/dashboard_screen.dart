@@ -103,39 +103,55 @@ class _DashboardScreenState extends State<DashboardScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Basic Header
+            // FIXED: Responsive Header
             AnimatedBuilder(
               animation: _headerAnimation,
               builder: (context, child) {
                 return Transform.translate(
                   offset: Offset(0, _headerAnimation.value),
                   child: Container(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                     color: Colors.white,
                     child: Row(
                       children: [
                         Container(
-                          width: 40,
-                          height: 30,
+                          width: 35,
+                          height: 28,
                           decoration: BoxDecoration(
                             color: Colors.orange,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Icon(Icons.bar_chart, color: Colors.white, size: 20),
+                          child: Icon(Icons.bar_chart, color: Colors.white, size: 18),
                         ),
-                        Spacer(),
-                        Text('MARKETWATCH', style: TextStyle(fontSize: 14)),
-                        SizedBox(width: 20),
-                        Text('FILES', style: TextStyle(fontSize: 14)),
-                        SizedBox(width: 20),
-                        Text('PORTFOLIO', style: TextStyle(fontSize: 14)),
-                        SizedBox(width: 20),
-                        Text('FUNDS', style: TextStyle(fontSize: 14)),
-                        Spacer(),
+                        SizedBox(width: 12),
+                        
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(child: _navItem('MARKETWATCH')),
+                              SizedBox(width: 12),
+                              Flexible(child: _navItem('FILES')),
+                              SizedBox(width: 12),
+                              Flexible(child: _navItem('PORTFOLIO')),
+                              SizedBox(width: 12),
+                              Flexible(child: _navItem('FUNDS')),
+                            ],
+                          ),
+                        ),
+                        
+                        SizedBox(width: 12),
                         CircleAvatar(
                           radius: 18,
                           backgroundColor: Colors.blue,
-                          child: Text('LK', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'LK', 
+                            style: TextStyle(
+                              color: Colors.white, 
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -161,31 +177,47 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ),
             
-            // Action Buttons
+            // FIXED: Better Action Buttons Layout
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.all(16),
               color: Colors.white,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              child: Column(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(Icons.cancel, size: 16),
-                    label: Text('Cancel All'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildBigActionButton(
+                          onPressed: () => _showCancelAllDialog(),
+                          icon: Icons.cancel,
+                          label: 'Cancel All',
+                          color: Colors.red,
+                          filled: true,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _buildBigActionButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Download coming soon')),
+                            );
+                          },
+                          icon: Icons.download,
+                          label: 'Download',
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(Icons.download, size: 16),
-                    label: Text('Download'),
-                  ),
-                  SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(Icons.search, size: 16, color: Colors.blue),
-                    label: Text('Search', style: TextStyle(color: Colors.blue)),
-                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.blue)),
+                  SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildBigActionButton(
+                      onPressed: () => _showSearchDialog(),
+                      icon: Icons.search,
+                      label: 'Search',
+                      color: Colors.blue,
+                    ),
                   ),
                 ],
               ),
@@ -201,13 +233,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Open Orders', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text(
+                          'Open Orders',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
                         Text('${filteredOrders.length} orders', style: TextStyle(color: Colors.grey)),
                       ],
                     ),
                     SizedBox(height: 16),
                     
-                    // Filter Chips
                     Text('Filter Orders', style: TextStyle(fontWeight: FontWeight.w500)),
                     SizedBox(height: 8),
                     Wrap(
@@ -231,7 +265,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                     
                     SizedBox(height: 16),
                     
-                    // Orders List
                     Expanded(
                       child: ListView.builder(
                         itemCount: filteredOrders.length,
@@ -249,6 +282,128 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _navItem(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildBigActionButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required Color color,
+    bool filled = false,
+  }) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 200),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: filled
+              ? ElevatedButton.icon(
+                  onPressed: onPressed,
+                  icon: Icon(icon, size: 18),
+                  label: Text(
+                    label, 
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                )
+              : OutlinedButton.icon(
+                  onPressed: onPressed,
+                  icon: Icon(icon, size: 18, color: color),
+                  label: Text(
+                    label, 
+                    style: TextStyle(
+                      color: color, 
+                      fontSize: 15, 
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: color, width: 1.5),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+        );
+      },
+    );
+  }
+
+  void _showCancelAllDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Cancel All Orders'),
+        content: Text('Are you sure you want to cancel all pending orders?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('All orders cancelled successfully')),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('Cancel All', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Search Orders'),
+        content: TextField(
+          decoration: InputDecoration(
+            hintText: 'Enter stock symbol (e.g., RELIANCE)',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.search),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Search feature coming soon')),
+              );
+            },
+            child: Text('Search'),
+          ),
+        ],
       ),
     );
   }
